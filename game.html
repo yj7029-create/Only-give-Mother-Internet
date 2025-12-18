@@ -179,12 +179,66 @@
         const container = document.getElementById('game-container');
         const overlay = document.getElementById('overlay');
 
+        // Sound Manager (File-based)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const buffers = {};
+
+        async function loadSound(name, url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                buffers[name] = audioBuffer;
+            } catch (e) {
+                console.error("Failed to load sound:", url, e);
+            }
+        }
+
+        // Load assets
+        loadSound('stage1', 'Assets/stage1.wav');
+        loadSound('stage2', 'Assets/stage2.wav');
+        loadSound('stage3', 'Assets/stage3.wav');
+
+        const SoundManager = {
+            play: (name) => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (!buffers[name]) return;
+
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffers[name];
+
+                // Randomize pitch slightly for variation
+                source.playbackRate.value = 0.9 + Math.random() * 0.2;
+
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.3; // Volume control
+
+                source.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                source.start(0);
+            },
+            playHum: () => {
+                // Keep procedural hum for Stage 4 since no file exists
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 60;
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+            }
+        };
+
         // Game State
         let stage = 1;
         let progress = 0;
         const debrisElements = [];
 
-        // Config
         // Config
         // "All items must be cleared" logic doesn't need thresholds, but we track count.
 
@@ -214,6 +268,9 @@
         function handleStage1Interaction(e) {
             if (stage !== 1) return;
 
+            // Ensure audio context starts on user interaction
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
             let allDone = true;
 
             debrisElements.forEach(obj => {
@@ -229,9 +286,13 @@
                     obj.health -= 0.5;
                     obj.el.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.5 + Math.random() * 0.5})`;
 
+                    // Play Stage 1 sound
+                    if (Math.random() < 0.2) SoundManager.play('stage1');
+
                     if (obj.health <= 0) {
                         obj.el.innerText = '.';
                         obj.done = true;
+                        SoundManager.play('stage1');
                     }
                 }
             });
@@ -281,6 +342,8 @@
                     const whiteness = Math.min(255, 100 + (20 - obj.health) * 7);
                     obj.el.style.color = `rgb(255, ${whiteness}, ${whiteness})`;
                     obj.el.style.filter = `blur(${2 + (20 - obj.health) / 2}px)`;
+
+                    if (Math.random() < 0.2) SoundManager.play('stage2');
 
                     if (obj.health <= 0) {
                         obj.done = true;
@@ -338,10 +401,13 @@
                         const currentTop = parseFloat(el.style.top);
                         el.style.top = (currentTop + 0.3) + '%';
 
+                        if (Math.random() < 0.1) SoundManager.play('stage3');
+
                         // If passes filter line (50%), dissolve
                         if (currentTop > 50 && el.style.opacity !== '0') {
                             el.style.opacity = 0;
                             remaining--;
+                            SoundManager.play('stage3');
                         }
                     }
                 });
@@ -361,8 +427,8 @@
 
             overlay.innerText = "Milk consistency: ACCEPTABLE\n(우유 농도: 적합)";
             overlay.style.opacity = 1;
-            // Ensure overlay doesn't block clicks (it has pointer-events: none, but let's be safe)
-            // Also the button has z-index 200 now (via CSS update if needed, but JS works too)
+
+            SoundManager.playHum();
 
             const milkFlow = document.getElementById('milk-flow');
             // Fill up screen
