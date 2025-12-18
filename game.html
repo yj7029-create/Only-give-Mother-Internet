@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only-Give - Production</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'JoseonBoldGothic';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunKg.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #ff0000;
+            font-family: 'JoseonBoldGothic', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            cursor: crosshair;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        /* Debris styles for Stage 1 & 2 */
+        .debris {
+            position: absolute;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s, filter 0.5s;
+        }
+
+        /* Stage 3: Filter styles */
+        #filter-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            /* Top half is the filter mesh */
+            background: repeating-linear-gradient(45deg,
+                    rgba(255, 0, 0, 0.05),
+                    rgba(255, 0, 0, 0.05) 10px,
+                    rgba(255, 0, 0, 0.1) 10px,
+                    rgba(255, 0, 0, 0.1) 20px);
+            border-bottom: 2px solid #ff0000;
+            display: none;
+            z-index: 10;
+        }
+
+        .impurity {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        /* Stage 4: Milk styles */
+        #milk-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .milk-flow {
+            width: 100%;
+            height: 0;
+            background-color: #ffeeee;
+            /* Totally white/creamy */
+            position: absolute;
+            bottom: 0;
+            transition: height 3s ease-in-out;
+        }
+
+        #feed-btn {
+            z-index: 50;
+            padding: 20px 40px;
+            font-size: 2rem;
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-family: 'JoseonBoldGothic', sans-serif;
+            display: none;
+        }
+
+        #feed-btn:hover {
+            background: #cc0000;
+        }
+
+        /* Ending Screen */
+        #ending-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #ff0000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        #ending-text {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #watch-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: 1px solid #ff0000;
+            background: transparent;
+            color: #ff0000;
+            cursor: pointer;
+            font-family: 'JoseonBoldGothic', sans-serif;
+            opacity: 0;
+            transition: opacity 2s;
+        }
+
+        #watch-btn:hover {
+            background: #ff0000;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="overlay" class="overlay-text"></div>
+        <div id="filter-layer"></div>
+        <div id="milk-container" style="display:none;"></div>
+        <div class="milk-flow" id="milk-flow"></div>
+        <button id="feed-btn">FEED ONLY TAKER</button>
+    </div>
+
+    <div id="ending-screen">
+        <div id="ending-text"></div>
+        <button id="watch-btn" onclick="location.href='video.html'">WATCH AS ONLY TAKER</button>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const overlay = document.getElementById('overlay');
+
+        // Game State
+        let stage = 1;
+        let progress = 0;
+        const debrisElements = [];
+
+        // Config
+        // Config
+        // "All items must be cleared" logic doesn't need thresholds, but we track count.
+
+        // Initialize Stage 1
+        function startStage1() {
+            overlay.innerText = "Raw data detected. (거친 데이터 감지)\nPlease chew thoroughly. (잘게 씹으세요)";
+            overlay.style.opacity = 1;
+            setTimeout(() => overlay.style.opacity = 0, 4000);
+
+            // Spawn raw data debris
+            const items = ['💾', '📱', '💬', '🤡', '#%!', '💔', '👁️', '🦷', '🩸'];
+            for (let i = 0; i < 40; i++) {
+                const el = document.createElement('div');
+                el.classList.add('debris');
+                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.style.left = Math.random() * 80 + 10 + '%';
+                el.style.top = Math.random() * 80 + 10 + '%';
+                el.style.transform = `rotate(${Math.random() * 360}deg)`;
+                container.appendChild(el);
+                // Health 15
+                debrisElements.push({ el: el, health: 15, done: false });
+            }
+
+            document.addEventListener('mousemove', handleStage1Interaction);
+        }
+
+        function handleStage1Interaction(e) {
+            if (stage !== 1) return;
+
+            let allDone = true;
+
+            debrisElements.forEach(obj => {
+                if (obj.done) return;
+                allDone = false;
+
+                const rect = obj.el.getBoundingClientRect();
+                const dx = e.clientX - (rect.left + rect.width / 2);
+                const dy = e.clientY - (rect.top + rect.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 50) {
+                    obj.health -= 0.5;
+                    obj.el.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.5 + Math.random() * 0.5})`;
+
+                    if (obj.health <= 0) {
+                        obj.el.innerText = '.';
+                        obj.done = true;
+                    }
+                }
+            });
+
+            // Only proceed if ALL are done
+            if (allDone) {
+                stage = 2;
+                document.removeEventListener('mousemove', handleStage1Interaction);
+                startStage2();
+            }
+        }
+
+        // Stage 2: Masticate
+        function startStage2() {
+            overlay.innerText = "Texturing... (질감 처리 중)\nMasticate properly. (제대로 씹으세요)";
+            overlay.style.opacity = 1;
+            setTimeout(() => overlay.style.opacity = 0, 3000);
+
+            // Reset for stage 2
+            debrisElements.forEach(obj => {
+                obj.el.innerText = '●';
+                obj.el.style.color = '#ffaaaa';
+                obj.el.style.filter = 'blur(2px)';
+                obj.health = 20;
+                obj.done = false; // Reset done flag
+            });
+
+            document.addEventListener('mousemove', handleStage2Interaction);
+        }
+
+        function handleStage2Interaction(e) {
+            if (stage !== 2) return;
+
+            let allDone = true;
+
+            debrisElements.forEach(obj => {
+                if (obj.done) return;
+                allDone = false;
+
+                const rect = obj.el.getBoundingClientRect();
+                const dx = e.clientX - (rect.left + rect.width / 2);
+                const dy = e.clientY - (rect.top + rect.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 50) {
+                    obj.health -= 0.5;
+                    const whiteness = Math.min(255, 100 + (20 - obj.health) * 7);
+                    obj.el.style.color = `rgb(255, ${whiteness}, ${whiteness})`;
+                    obj.el.style.filter = `blur(${2 + (20 - obj.health) / 2}px)`;
+
+                    if (obj.health <= 0) {
+                        obj.done = true;
+                    }
+                }
+            });
+
+            if (allDone) {
+                stage = 3;
+                document.removeEventListener('mousemove', handleStage2Interaction);
+                startStage3();
+            }
+        }
+
+        // Stage 3: Filtering
+        function startStage3() {
+            // Clear previous debris
+            debrisElements.forEach(obj => obj.el.remove());
+            debrisElements.length = 0;
+
+            overlay.innerText = "Filtering impurities... (불순물 여과 중)\nRemoving meaning... (의미 제거 중)";
+            overlay.style.opacity = 1;
+            setTimeout(() => overlay.style.opacity = 0, 3000);
+
+            document.getElementById('filter-layer').style.display = 'block';
+
+            // Spawn "impurities" at top
+            for (let i = 0; i < 40; i++) {
+                const el = document.createElement('div');
+                el.classList.add('impurity');
+                el.style.left = Math.random() * 90 + '%';
+                el.style.top = Math.random() * 30 + '%';
+                container.appendChild(el);
+                debrisElements.push(el);
+            }
+
+            document.addEventListener('mousemove', handleStage3Interaction);
+        }
+
+        let lastY = 0;
+        function handleStage3Interaction(e) {
+            if (stage !== 3) return;
+
+            // Count how many are left visible
+            let remaining = debrisElements.filter(el => el.style.opacity !== '0').length;
+
+            // Detect downward drag
+            if (e.clientY > lastY) {
+                // Dragging down
+                debrisElements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const dx = e.clientX - (rect.left + rect.width / 2);
+                    if (Math.abs(dx) < 100) {
+                        // Move down slower
+                        const currentTop = parseFloat(el.style.top);
+                        el.style.top = (currentTop + 0.3) + '%';
+
+                        // If passes filter line (50%), dissolve
+                        if (currentTop > 50 && el.style.opacity !== '0') {
+                            el.style.opacity = 0;
+                            remaining--;
+                        }
+                    }
+                });
+            }
+            lastY = e.clientY;
+
+            if (remaining === 0) {
+                stage = 4;
+                document.removeEventListener('mousemove', handleStage3Interaction);
+                startStage4();
+            }
+        }
+
+        // Stage 4: Milk Output
+        function startStage4() {
+            document.getElementById('filter-layer').style.display = 'none';
+
+            overlay.innerText = "Milk consistency: ACCEPTABLE\n(우유 농도: 적합)";
+            overlay.style.opacity = 1;
+            // Ensure overlay doesn't block clicks (it has pointer-events: none, but let's be safe)
+            // Also the button has z-index 200 now (via CSS update if needed, but JS works too)
+
+            const milkFlow = document.getElementById('milk-flow');
+            // Fill up screen
+            setTimeout(() => {
+                milkFlow.style.height = "100%";
+            }, 500);
+
+            setTimeout(() => {
+                const btn = document.getElementById('feed-btn');
+                btn.style.display = 'block';
+
+                // Fix Z-Index and Position
+                btn.style.zIndex = "9999";
+
+                // Center button on screen
+                btn.style.position = 'absolute';
+                btn.style.top = '50%';
+                btn.style.left = '50%';
+                btn.style.transform = 'translate(-50%, -50%)';
+                btn.innerText = "FEED ONLY TAKER\n(온텍에게 수유하기)";
+                btn.style.textAlign = "center";
+
+                btn.onclick = startEnding;
+            }, 3000);
+        }
+
+        // Ending
+        function startEnding() {
+            document.getElementById('game-container').style.display = 'none';
+            const endScreen = document.getElementById('ending-screen');
+            endScreen.style.display = 'flex';
+
+            const endText = document.getElementById('ending-text');
+
+            typeWriter("Your labor has been delivered.\n(당신의 노동이 전달되었습니다.)\n\nYou will not witness consumption.\n(당신은 섭취를 목격하지 못할 것입니다.)", endText, () => {
+                setTimeout(() => {
+                    const p = document.createElement('p');
+                    p.innerText = "Thank you for remaining productive.\n(생산적인 상태를 유지해 주셔서 감사합니다.)";
+                    p.style.fontSize = "1rem";
+                    p.style.marginTop = "20px";
+                    endText.appendChild(p);
+
+                    setTimeout(() => {
+                        document.getElementById('watch-btn').innerText = "WATCH AS ONLY TAKER\n(온텍으로 관람하기)";
+                        document.getElementById('watch-btn').style.opacity = 1;
+                    }, 1500);
+                }, 1000);
+            });
+        }
+
+        function typeWriter(text, element, callback) {
+            let i = 0;
+            element.innerHTML = "";
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        // Start Game
+        startStage1();
+
+    </script>
+</body>
+
+</html>

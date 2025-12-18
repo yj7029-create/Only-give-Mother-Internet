@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only-give Mother Internet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'JoseonBoldGothic';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunKg.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #ff0000;
+            font-family: 'JoseonBoldGothic', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: #ff0000;
+            font-size: 4.5rem;
+            /* Larger font */
+            text-align: center;
+            display: inline-block;
+            transition: transform 0.1s ease;
+            line-height: 1.4;
+            /* Increased line height */
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            display: block;
+            margin-top: 30px;
+            opacity: 0.8;
+            font-weight: normal;
+        }
+
+        a:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="select.html" id="title">
+        온깁 마더 인터넷<br>
+        (Only-Give Mother Internet)<br>
+        <span class="subtitle">Click to Enter</span>
+    </a>
+
+    <script>
+        const title = document.getElementById('title');
+
+        document.addEventListener('mousemove', (e) => {
+            const { clientX: x, clientY: y } = e;
+            const { innerWidth: width, innerHeight: height } = window;
+
+            // Calculate distance from center (range -1 to 1)
+            const xMove = (x / width * 2) - 1;
+            const yMove = (y / height * 2) - 1;
+
+            // Shadow moves opposite to mouse
+            const shadowX = -xMove * 30;
+            const shadowY = -yMove * 30;
+            // Blur increases based on distance from center
+            const blur = 15 + (Math.abs(xMove) + Math.abs(yMove)) * 15;
+
+            // Red blur glow
+            title.style.textShadow = `${shadowX}px ${shadowY}px ${blur}px rgba(255, 0, 0, 0.6)`;
+        });
+    </script>
+</body>
+
+</html>
