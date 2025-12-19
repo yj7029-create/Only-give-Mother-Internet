@@ -44,7 +44,6 @@
             z-index: 100;
             opacity: 1;
             transition: opacity 1s;
-            line-height: 1.6;
         }
 
         /* Debris styles for Stage 1 & 2 */
@@ -114,7 +113,6 @@
             cursor: pointer;
             font-family: 'JoseonBoldGothic', sans-serif;
             display: none;
-            line-height: 1.4;
         }
 
         #feed-btn:hover {
@@ -153,6 +151,8 @@
             font-family: 'JoseonBoldGothic', sans-serif;
             opacity: 0;
             transition: opacity 2s;
+            pointer-events: none;
+            /* Prevent clicking while invisible */
         }
 
         #watch-btn:hover {
@@ -243,6 +243,8 @@
 
         // Config
         // "All items must be cleared" logic doesn't need thresholds, but we track count.
+        const INTERACTION_RADIUS = 40; // Decreased to 40 (Harder precision)
+        const DAMAGE_PER_FRAME = 0.7;  // Decreased to 0.7 (Slower chewing)
 
         // Initialize Stage 1
         function startStage1() {
@@ -284,8 +286,8 @@
                 const dy = e.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist < 50) {
-                    obj.health -= 0.5;
+                if (dist < INTERACTION_RADIUS) {
+                    obj.health -= DAMAGE_PER_FRAME;
                     obj.el.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.5 + Math.random() * 0.5})`;
 
                     // Play Stage 1 sound
@@ -339,8 +341,8 @@
                 const dy = e.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist < 50) {
-                    obj.health -= 0.5;
+                if (dist < INTERACTION_RADIUS) {
+                    obj.health -= DAMAGE_PER_FRAME;
                     const whiteness = Math.min(255, 100 + (20 - obj.health) * 7);
                     obj.el.style.color = `rgb(255, ${whiteness}, ${whiteness})`;
                     obj.el.style.filter = `blur(${2 + (20 - obj.health) / 2}px)`;
@@ -465,7 +467,7 @@
 
             const endText = document.getElementById('ending-text');
 
-            typeWriter("Your labor has been delivered.\n(당신의 노동이 전달되었습니다.)\n\nYou will not witness consumption.\n(당신은 섭취를 목격하지 못할 것입니다.)", endText, () => {
+            typeWriter("Your labor has been delivered.\n(당신의 노동이 전달되었습니다.)", endText, () => {
                 setTimeout(() => {
                     const p = document.createElement('p');
                     p.innerText = "Thank you for remaining productive.\n(생산적인 상태를 유지해 주셔서 감사합니다.)";
@@ -474,8 +476,10 @@
                     endText.appendChild(p);
 
                     setTimeout(() => {
-                        document.getElementById('watch-btn').innerText = "WATCH AS ONLY TAKER\n(온텍으로 관람하기)";
-                        document.getElementById('watch-btn').style.opacity = 1;
+                        const btn = document.getElementById('watch-btn');
+                        btn.innerText = "BECOME ONLY TAKER\n(온텍 되기)";
+                        btn.style.opacity = 1;
+                        btn.style.pointerEvents = "auto"; // Enable clicking only now
                     }, 1500);
                 }, 1000);
             });
