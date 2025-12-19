@@ -264,26 +264,14 @@
                 debrisElements.push({ el: el, health: 15, done: false });
             }
 
-            ['mousemove', 'touchmove'].forEach(evt =>
-                document.addEventListener(evt, handleStage1Interaction, { passive: false })
-            );
+            document.addEventListener('mousemove', handleStage1Interaction);
         }
 
         function handleStage1Interaction(e) {
             if (stage !== 1) return;
-            if (e.cancelable) e.preventDefault(); // Stop scrolling
 
-            // Ensure audio context starts
+            // Ensure audio context starts on user interaction
             if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
 
             let allDone = true;
 
@@ -292,15 +280,15 @@
                 allDone = false;
 
                 const rect = obj.el.getBoundingClientRect();
-                const dx = clientX - (rect.left + rect.width / 2);
-                const dy = clientY - (rect.top + rect.height / 2);
+                const dx = e.clientX - (rect.left + rect.width / 2);
+                const dy = e.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // Radius increased to 70 for easier mobile touch
-                if (dist < 70) {
-                    obj.health -= 5; // Damage increased from 0.5 to 5 (pop fast)
+                if (dist < 50) {
+                    obj.health -= 0.5;
                     obj.el.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.5 + Math.random() * 0.5})`;
 
+                    // Play Stage 1 sound
                     if (Math.random() < 0.2) SoundManager.play('stage1');
 
                     if (obj.health <= 0) {
@@ -311,11 +299,10 @@
                 }
             });
 
+            // Only proceed if ALL are done
             if (allDone) {
                 stage = 2;
-                ['mousemove', 'touchmove'].forEach(evt =>
-                    document.removeEventListener(evt, handleStage1Interaction)
-                );
+                document.removeEventListener('mousemove', handleStage1Interaction);
                 startStage2();
             }
         }
@@ -335,23 +322,11 @@
                 obj.done = false; // Reset done flag
             });
 
-            ['mousemove', 'touchmove'].forEach(evt =>
-                document.addEventListener(evt, handleStage2Interaction, { passive: false })
-            );
+            document.addEventListener('mousemove', handleStage2Interaction);
         }
 
         function handleStage2Interaction(e) {
             if (stage !== 2) return;
-            if (e.cancelable) e.preventDefault();
-
-            let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
 
             let allDone = true;
 
@@ -360,13 +335,12 @@
                 allDone = false;
 
                 const rect = obj.el.getBoundingClientRect();
-                const dx = clientX - (rect.left + rect.width / 2);
-                const dy = clientY - (rect.top + rect.height / 2);
+                const dx = e.clientX - (rect.left + rect.width / 2);
+                const dy = e.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // Radius 70
-                if (dist < 70) {
-                    obj.health -= 5; // Much faster decay
+                if (dist < 50) {
+                    obj.health -= 0.5;
                     const whiteness = Math.min(255, 100 + (20 - obj.health) * 7);
                     obj.el.style.color = `rgb(255, ${whiteness}, ${whiteness})`;
                     obj.el.style.filter = `blur(${2 + (20 - obj.health) / 2}px)`;
@@ -381,9 +355,7 @@
 
             if (allDone) {
                 stage = 3;
-                ['mousemove', 'touchmove'].forEach(evt =>
-                    document.removeEventListener(evt, handleStage2Interaction)
-                );
+                document.removeEventListener('mousemove', handleStage2Interaction);
                 startStage3();
             }
         }
@@ -410,39 +382,30 @@
                 debrisElements.push(el);
             }
 
-            ['mousemove', 'touchmove'].forEach(evt =>
-                document.addEventListener(evt, handleStage3Interaction, { passive: false })
-            );
+            document.addEventListener('mousemove', handleStage3Interaction);
         }
 
         let lastY = 0;
         function handleStage3Interaction(e) {
             if (stage !== 3) return;
-            if (e.cancelable) e.preventDefault();
 
-            let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
+            // Count how many are left visible
             let remaining = debrisElements.filter(el => el.style.opacity !== '0').length;
 
             // Detect downward drag
-            if (clientY > lastY) {
+            if (e.clientY > lastY) {
+                // Dragging down
                 debrisElements.forEach(el => {
                     const rect = el.getBoundingClientRect();
-                    const dx = clientX - (rect.left + rect.width / 2);
-                    // Radius 100 is already generous, keep it
+                    const dx = e.clientX - (rect.left + rect.width / 2);
                     if (Math.abs(dx) < 100) {
+                        // Move down slower
                         const currentTop = parseFloat(el.style.top);
                         el.style.top = (currentTop + 0.3) + '%';
 
                         if (Math.random() < 0.1) SoundManager.play('stage3');
 
+                        // If passes filter line (50%), dissolve
                         if (currentTop > 50 && el.style.opacity !== '0') {
                             el.style.opacity = 0;
                             remaining--;
@@ -451,13 +414,11 @@
                     }
                 });
             }
-            lastY = clientY;
+            lastY = e.clientY;
 
             if (remaining === 0) {
                 stage = 4;
-                ['mousemove', 'touchmove'].forEach(evt =>
-                    document.removeEventListener(evt, handleStage3Interaction)
-                );
+                document.removeEventListener('mousemove', handleStage3Interaction);
                 startStage4();
             }
         }
