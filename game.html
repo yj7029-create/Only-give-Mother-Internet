@@ -260,8 +260,8 @@
                 const el = document.createElement('div');
                 el.classList.add('debris');
                 el.innerText = items[Math.floor(Math.random() * items.length)];
-                el.style.left = Math.random() * 80 + 10 + '%';
-                el.style.top = Math.random() * 80 + 10 + '%';
+                el.style.left = Math.random() * 70 + 15 + '%'; // 15% - 85%
+                el.style.top = Math.random() * 60 + 20 + '%';  // 20% - 80% (Avoid edges)
                 el.style.transform = `rotate(${Math.random() * 360}deg)`;
                 container.appendChild(el);
                 // Health 15
@@ -381,7 +381,7 @@
                 const el = document.createElement('div');
                 el.classList.add('impurity');
                 el.style.left = Math.random() * 90 + '%';
-                el.style.top = Math.random() * 30 + '%';
+                el.style.top = Math.random() * 20 + 15 + '%'; // 15% - 35%
                 container.appendChild(el);
                 debrisElements.push(el);
             }
