@@ -261,7 +261,7 @@
                 el.classList.add('debris');
                 el.innerText = items[Math.floor(Math.random() * items.length)];
                 el.style.left = Math.random() * 70 + 15 + '%'; // 15% - 85%
-                el.style.top = Math.random() * 50 + 20 + '%';  // 20% - 70% (More bottom buffer)
+                el.style.top = Math.random() * 65 + 10 + '%';  // 10% - 75% (Adjusted mobile margins)
                 el.style.transform = `rotate(${Math.random() * 360}deg)`;
                 container.appendChild(el);
                 // Health 15
