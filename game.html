@@ -25,6 +25,8 @@
             overflow: hidden;
             user-select: none;
             cursor: crosshair;
+            touch-action: none;
+            /* Prevent scrolling/zooming on mobile */
         }
 
         #game-container {
@@ -266,7 +268,7 @@
                 debrisElements.push({ el: el, health: 15, done: false });
             }
 
-            document.addEventListener('mousemove', handleStage1Interaction);
+            document.addEventListener('pointermove', handleStage1Interaction);
         }
 
         function handleStage1Interaction(e) {
@@ -304,7 +306,7 @@
             // Only proceed if ALL are done
             if (allDone) {
                 stage = 2;
-                document.removeEventListener('mousemove', handleStage1Interaction);
+                document.removeEventListener('pointermove', handleStage1Interaction);
                 startStage2();
             }
         }
@@ -324,7 +326,7 @@
                 obj.done = false; // Reset done flag
             });
 
-            document.addEventListener('mousemove', handleStage2Interaction);
+            document.addEventListener('pointermove', handleStage2Interaction);
         }
 
         function handleStage2Interaction(e) {
@@ -357,7 +359,7 @@
 
             if (allDone) {
                 stage = 3;
-                document.removeEventListener('mousemove', handleStage2Interaction);
+                document.removeEventListener('pointermove', handleStage2Interaction);
                 startStage3();
             }
         }
@@ -384,7 +386,7 @@
                 debrisElements.push(el);
             }
 
-            document.addEventListener('mousemove', handleStage3Interaction);
+            document.addEventListener('pointermove', handleStage3Interaction);
         }
 
         let lastY = 0;
@@ -420,7 +422,7 @@
 
             if (remaining === 0) {
                 stage = 4;
-                document.removeEventListener('mousemove', handleStage3Interaction);
+                document.removeEventListener('pointermove', handleStage3Interaction);
                 startStage4();
             }
         }
