@@ -250,6 +250,7 @@
 
         // Initialize Stage 1
         function startStage1() {
+            overlay.style.fontSize = ''; // Reset font size
             overlay.innerText = "Raw data detected. (거친 데이터 감지)\nPlease chew thoroughly. (잘게 씹으세요)";
             overlay.style.opacity = 1;
             setTimeout(() => overlay.style.opacity = 0, 4000);
@@ -260,8 +261,8 @@
                 const el = document.createElement('div');
                 el.classList.add('debris');
                 el.innerText = items[Math.floor(Math.random() * items.length)];
-                el.style.left = Math.random() * 70 + 15 + '%'; // 15% - 85%
-                el.style.top = Math.random() * 65 + 10 + '%';  // 10% - 75% (Adjusted mobile margins)
+                el.style.left = Math.random() * 70 + 10 + '%'; // 10% - 80%
+                el.style.top = Math.random() * 70 + 10 + '%';  // 10% - 80%
                 el.style.transform = `rotate(${Math.random() * 360}deg)`;
                 container.appendChild(el);
                 // Health 15
@@ -380,7 +381,7 @@
             for (let i = 0; i < 40; i++) {
                 const el = document.createElement('div');
                 el.classList.add('impurity');
-                el.style.left = Math.random() * 90 + '%';
+                el.style.left = Math.random() * 70 + 10 + '%'; // 10% - 80%
                 el.style.top = Math.random() * 20 + 15 + '%'; // 15% - 35%
                 container.appendChild(el);
                 debrisElements.push(el);
@@ -502,8 +503,23 @@
             type();
         }
 
+        // Intro: Landscape Recommendation
+        function initGame() {
+            // Check if mobile (optional, but good to have context, but here we just show the message as requested)
+            // Matching the stylistic format: English \n (Korean)
+            overlay.style.fontSize = '1.3rem'; // Smaller font for longer text
+            overlay.innerText = "Landscape mode recommended for mobile play.\n(모바일 접속 시 가로모드로 플레이를 추천합니다)\n\nPlay with your mouse or finger.\n(마우스 혹은 손가락을 이용해 플레이하세요)";
+            overlay.style.opacity = 1;
+
+            setTimeout(() => {
+                overlay.style.opacity = 0;
+                // Start Stage 1 after the message fades
+                setTimeout(startStage1, 1000);
+            }, 4000); // Increased read time slightly
+        }
+
         // Start Game
-        startStage1();
+        initGame();
 
     </script>
 </body>
