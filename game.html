@@ -46,6 +46,7 @@
             z-index: 100;
             opacity: 1;
             transition: opacity 1s;
+            line-height: 1.6;
         }
 
         /* Debris styles for Stage 1 & 2 */
@@ -141,6 +142,7 @@
             font-size: 1.5rem;
             margin-bottom: 30px;
             text-align: center;
+            line-height: 1.6;
         }
 
         #watch-btn {
@@ -470,7 +472,7 @@
 
             const endText = document.getElementById('ending-text');
 
-            typeWriter("Your labor has been delivered.\n(당신의 노동이 전달되었습니다.)", endText, () => {
+            typeWriter("Your labor has been delivered.\n(당신의 노동이 전달되었습니다.)\n\nOnly-Taker's response curve has peaked.\nService successfully provided.\n(온텍의 반응 곡선이 정점에 도달했습니다. 서비스를 성공적으로 마칩니다.)", endText, () => {
                 setTimeout(() => {
                     const p = document.createElement('p');
                     p.innerText = "Thank you for remaining productive.\n(생산적인 상태를 유지해 주셔서 감사합니다.)";
